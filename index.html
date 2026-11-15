@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>คนผลัดถิ่น - ศูนย์แพทช์เกมแปลไทย (PS1 / PS2)</title>
+  <style>
+    :root {
+      --bg: #121212;
+      --card: #1e1e1e;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --border: #2d2d2d;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 24px 16px; line-height: 1.6; }
+    .container { max-width: 650px; margin: 0 auto; }
+    
+    header { text-align: center; margin-bottom: 30px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
+    header h1 { font-size: 2rem; color: var(--text); letter-spacing: 1px; }
+    header p { color: var(--accent); font-size: 0.95rem; margin-top: 4px; }
+
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+    .card h2 { font-size: 1.15rem; margin-bottom: 12px; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    
+    label { display: block; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 6px; }
+    select, input[type="text"], input[type="email"], textarea {
+      width: 100%;
+      padding: 12px;
+      background: #141414;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+      margin-bottom: 12px;
+    }
+    select:focus, textarea:focus, input:focus { border-color: var(--accent); }
+
+    .game-note {
+      background: rgba(56, 189, 248, 0.08);
+      border-left: 3px solid var(--accent);
+      padding: 10px 14px;
+      font-size: 0.88rem;
+      color: #e2e8f0;
+      border-radius: 4px;
+      margin-bottom: 15px;
+    }
+
+    .drop-box {
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 30px 15px;
+      text-align: center;
+      cursor: pointer;
+      background: #161616;
+      margin-bottom: 15px;
+    }
+    .drop-box:hover { border-color: var(--accent); }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      background: var(--accent);
+      color: #000;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+    }
+    .btn:hover { background: var(--accent-hover); color: #fff; }
+    .btn:disabled { background: #333; color: #777; cursor: not-allowed; }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      margin-top: 10px;
+      padding: 10px;
+      font-size: 0.9rem;
+    }
+    .btn-secondary:hover { background: rgba(56, 189, 248, 0.1); }
+
+    #status { margin-top: 12px; text-align: center; font-size: 0.9rem; }
+    .footer { text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 40px; }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/gh/marcrobledo/RomPatcher.js@master/RomPatcher.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+  
+  <header>
+    <h1>คนผลัดถิ่น</h1>
+    <p>ศูนย์รวมแพทช์เกมแปลภาษาไทย (PS1 & PS2)</p>
+  </header>
+
+  <div class="card">
+    <h2>1. เลือกเกมที่ต้องการ</h2>
+    
+    <label for="gameSelect">รายชื่อเกม:</label>
+    <select id="gameSelect">
+      <option value="">-- แตะเพื่อเลือกเกม --</option>
+    </select>
+
+    <div id="gameNote" class="game-note" style="display: none;"></div>
+
+    <label>ไฟล์เกมต้นฉบับ:</label>
+    <div class="drop-box" id="dropBox">
+      <div id="fileStatusText">แตะที่นี่เพื่อเลือกไฟล์เกมจากเครื่อง (.bin / .iso)</div>
+      <input type="file" id="romFile" style="display: none;">
+    </div>
+
+    <button id="patchBtn" class="btn" disabled>เริ่มการแพทช์เกม</button>
+    <button id="downloadCueBtn" class="btn btn-secondary" style="display: none;">ดาวน์โหลดไฟล์ .CUE สำหรับเกมนี้</button>
+    
+    <div id="status"></div>
+  </div>
+
+  <div class="card">
+    <h2>2. แจ้งพบบั๊ก / ปัญหาในเกม</h2>
+    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+      หากพบข้อความล้น สระซ้อน จอดำ หรือตัวเกมค้าง สามารถแจ้งให้ทราบได้ที่นี่ครับ
+    </p>
+
+    <form id="bugForm" action="https://formsubmit.co/your-email@gmail.com" method="POST">
+      <label>ชื่อเกมที่มีปัญหา:</label>
+      <input type="text" name="game_name" id="reportGameName" placeholder="เช่น Front Mission 5 หรือชื่อเกมที่พบ" required>
+
+      <label>จุดที่พบบั๊กและรายละเอียด:</label>
+      <textarea name="description" rows="4" placeholder="เช่น ฉากคุยกับตัวละคร A แล้วตัวหนังสือล้นจอ, ค้างตอนเปลี่ยนฉาก ฯลฯ" required></textarea>
+
+      <label>อีเมลติดต่อกลับ (ไม่บังคับ):</label>
+      <input type="email" name="contact_email" placeholder="example@email.com">
+
+      <button type="submit" class="btn" style="background: #334155; color: #fff;">ส่งรายงานบั๊ก</button>
+    </form>
+  </div>
+
+  <div class="footer">
+    แปลไทยโดย คนผลัดถิ่น • ไฟล์เกมประมวลผลภายในเบราว์เซอร์ของท่านเอง ไม่มีการอัปโหลดไฟล์
+  </div>
+
+</div>
+
+<script>
+  const GAMES = [
+    {
+      id: "fm5-ps2",
+      title: "Front Mission 5: Scars of the Leftovers (PS2)",
+      platform: "PS2",
+      patchFile: "patches/fm5_thai.xdelta",
+      outputExt: "iso",
+      note: "ใช้ไฟล์ ISO ภาษาอังกฤษ (English Patched Base) เท่านั้น",
+      cueContent: null
+    },
+    {
+      id: "game-ps1-sample",
+      title: "ตัวอย่างเกม PS1 แปลไทย (PS1)",
+      platform: "PS1",
+      patchFile: "patches/sample_ps1.ppf",
+      outputExt: "bin",
+      note: "ใช้ไฟล์ .bin โซน USA (SLUS-xxxxx) แนะนำให้โหลด .cue ไปคู่กัน",
+      cueContent: `FILE "Game_TH.bin" BINARY\n  TRACK 01 MODE2/2352\n    INDEX 01 00:00:00`
+    }
+  ];
+
+  const gameSelect = document.getElementById('gameSelect');
+  const gameNote = document.getElementById('gameNote');
+  const dropBox = document.getElementById('dropBox');
+  const romFile = document.getElementById('romFile');
+  const fileStatusText = document.getElementById('fileStatusText');
+  const patchBtn = document.getElementById('patchBtn');
+  const downloadCueBtn = document.getElementById('downloadCueBtn');
+  const statusDiv = document.getElementById('status');
+  const reportGameName = document.getElementById('reportGameName');
+
+  let activeGame = null;
+  let loadedFile = null;
+
+  GAMES.forEach(g => {
+    const opt = document.createElement('option');
+    opt.value = g.id;
+    opt.textContent = `[${g.platform}] ${g.title}`;
+    gameSelect.appendChild(opt);
+  });
+
+  gameSelect.addEventListener('change', (e) => {
+    activeGame = GAMES.find(g => g.id === e.target.value);
+    if (activeGame) {
+      gameNote.style.display = "block";
+      gameNote.innerHTML = `<strong>คำแนะนำ:</strong> ${activeGame.note}`;
+      reportGameName.value = activeGame.title;
+
+      if (activeGame.cueContent) {
+        downloadCueBtn.style.display = "block";
+      } else {
+        downloadCueBtn.style.display = "none";
+      }
+    } else {
+      gameNote.style.display = "none";
+      downloadCueBtn.style.display = "none";
+      reportGameName.value = "";
+    }
+    checkReady();
+  });
+
+  dropBox.addEventListener('click', () => romFile.click());
+  romFile.addEventListener('change', (e) => {
+    if (e.target.files.length) {
+      loadedFile = e.target.files[0];
+      fileStatusText.innerHTML = `✅ เลือกไฟล์: <strong>${loadedFile.name}</strong> (${(loadedFile.size / (1024*1024)).toFixed(1)} MB)`;
+      checkReady();
+    }
+  });
+
+  function checkReady() {
+    patchBtn.disabled = !(activeGame && loadedFile);
+  }
+
+  downloadCueBtn.addEventListener('click', () => {
+    if (!activeGame || !activeGame.cueContent) return;
+    const blob = new Blob([activeGame.cueContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${activeGame.id}_TH.cue`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  patchBtn.addEventListener('click', async () => {
+    if (!activeGame || !loadedFile) return;
+
+    patchBtn.disabled = true;
+    statusDiv.style.color = "var(--text-muted)";
+    statusDiv.innerText = "กำลังดาวน์โหลดไฟล์แพทช์...";
+
+    try {
+      const pRes = await fetch(activeGame.patchFile);
+      if (!pRes.ok) throw new Error("ไม่พบไฟล์แพทช์บนระบบ");
+      const pBuffer = await pRes.arrayBuffer();
+
+      statusDiv.innerText = "กำลังแปลงข้อมูลไฟล์เกม (อาจใช้เวลาสักครู่)...";
+      const rBuffer = await loadedFile.arrayBuffer();
+
+      const romObj = new RomPatcher.RomFile(rBuffer, loadedFile.name);
+      const patchObj = RomPatcher.parsePatchFile(pBuffer);
+
+      if (!patchObj) throw new Error("ไฟล์แพทช์ผิดพลาดหรือไม่รองรับ");
+
+      const resultRom = patchObj.apply(romObj);
+
+      statusDiv.style.color = "#4ade80";
+      statusDiv.innerText = "🎉 เสร็จเรียบร้อย! เริ่มดาวน์โหลดไฟล์เกม...";
+
+      const cleanName = loadedFile.name.substring(0, loadedFile.name.lastIndexOf('.')) || loadedFile.name;
+      resultRom.download(`${cleanName}_TH.${activeGame.outputExt}`);
+      patchBtn.disabled = false;
+
+    } catch (err) {
+      statusDiv.style.color = "#f87171";
+      statusDiv.innerText = `ข้อผิดพลาด: ${err.message}`;
+      patchBtn.disabled = false;
+    }
+  });
+</script>
+
+</body>
+</html>
